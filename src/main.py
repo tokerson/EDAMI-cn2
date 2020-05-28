@@ -15,5 +15,5 @@ def load_data(filename):
 if __name__ == "__main__":
     training_set = load_data(os.path.join(path, 'data', 'training.csv'))
     test_set = load_data(os.path.join(path, 'data', 'test.csv'))
-    cn2 = CN2(training_set, test_set)
+    cn2 = CN2(training_set)
     cn2.learn()
