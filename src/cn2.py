@@ -1,27 +1,129 @@
 import numpy as np
 
+
 class CN2:
-    def __init__(self, training_set):
+    def __init__(self, training_set, attributes, min_significance=0.8, star_max_size=5):
         self.training_set = training_set
+        self.attributes = attributes
+        self.classified_results = training_set['result'].to_numpy()
+        self.selectors = self.get_selectors(attributes)
+        self.min_significance = min_significance
+        self.star_max_size = star_max_size
+        self.E = training_set.copy()
+
+    def get_selectors(self, attributes):
+        _attributes = attributes[0:-1]  # remove result from selector attributes
+        selectors = []
+        for attribute in _attributes:
+            self.possible_values = self.training_set[attribute].unique()
+            for value in self.possible_values:
+                selectors.append((attribute, value))
+        return selectors
 
     def learn(self):
-        rule_list = np.empty(0)
-        while (self.training_set.empty == False):
-            best_condition_expression = self.find_best_condition_expression()
-            if (best_condition_expression is not None):
-                training_subset = self.get_examples_covered_by_expression(best_condition_expression)
+        rule_list = []
+        while (self.E.empty == False):
+            best_complex = self.find_best_condition_expression()
+            if (best_complex is not None):
+                training_subset = self.get_examples_covered_by_complex(best_complex)
                 # drop items by indexes in training_set
-                self.training_set.drop([])
+                self.E = self.E.drop(training_subset.index)
                 most_common_class = self.get_most_common_class_from_subset(training_subset)
-                np.append(rule_list, "if {} then the class is {}".format(best_condition_expression, most_common_class))
+                rule_list.append("if {} then the class is {}".format(best_complex, most_common_class))
+            else:
+                break
+            print(len(self.E))
 
         return rule_list
 
     def find_best_condition_expression(self):
-        pass
+        star = []
+        best_complex = None
+        best_entropy = None
+        while True:
+            new_star = self.set_new_star(star)
+            complex_entropies = {}
+            for index, complex in enumerate(new_star):
+                significance, entropy = self.get_significance_and_entropy(complex)
+                complex_entropies[index] = entropy
+                if best_entropy is None: best_entropy = entropy
 
-    def get_examples_covered_by_expression(self, best_condition_expression):
-        pass
+                if significance > self.min_significance and entropy < best_entropy:
+                    best_complex = complex.copy()
+                    best_entropy = entropy
+
+            # remove the worst complexes
+            best_complex_indexes = sorted(complex_entropies.items(), key=lambda item: item[1], reverse=True)[
+                                   0:self.star_max_size]
+
+            star = [new_star[x[0]] for x in best_complex_indexes]
+            if len(star) == 0:
+                break
+
+        return best_complex
+
+    def get_examples_covered_by_complex(self, best_complex):
+        values = dict()
+        [values[t[0]].append(t[1]) if t[0] in list(values.keys())
+         else values.update({t[0]: [t[1]]}) for t in best_complex]
+
+        for attribute in self.attributes:
+            if attribute not in values:
+                values[attribute] = self.training_set[attribute].unique()
+
+        covered_examples = self.E[self.E.isin(values).all(axis=1)]
+        return covered_examples
 
     def get_most_common_class_from_subset(self, training_subset):
-        pass
+        classes = self.training_set.loc[training_subset.index, ['result']]
+        return classes.iloc[:, 0].value_counts(sort=True).index[0]
+
+    def set_new_star(self, star):
+        new_star = []
+        if len(star) > 0:
+            for complex in star:
+                for selector in self.selectors:
+                    new_complex = self.get_new_complex(complex, selector)
+                    if new_complex is not None:
+                        new_star.append(new_complex)
+        else:
+            for selector in self.selectors:
+                complex = [selector]
+                new_star.append(complex)
+
+        return new_star
+
+    def get_new_complex(self, complex, selector):
+        for _selector in complex:
+            if selector[0] == _selector[0]:
+                return None  # it is duplicate
+
+        return complex.append(selector)
+
+    def get_significance_and_entropy(self, complex):
+        covered_examples = self.get_examples_covered_by_complex(complex)
+        classes_covered_by_complex_probs = self.get_covered_classes_probabilities(covered_examples)
+
+        significance = self.calculate_significance(classes_covered_by_complex_probs)
+        entropy = self.calculate_entropy(classes_covered_by_complex_probs)
+
+        return (significance, entropy)
+
+    def get_covered_classes_probabilities(self, covered_examples):
+        classes = self.training_set.loc[covered_examples.index, ['result']]
+        covered_classes_counts = classes.iloc[:, 0].value_counts()
+        return covered_classes_counts.divide(len(classes))
+
+    def calculate_significance(self, covered_classes_probs):
+        train_classes = self.training_set.iloc[:, -1]
+        train_num_instances = len(train_classes)
+        train_counts = train_classes.value_counts()
+        train_probs = train_counts.divide(train_num_instances)
+
+        return covered_classes_probs.multiply(
+            np.log(covered_classes_probs.divide(train_probs))).sum() * 2
+
+    def calculate_entropy(self, covered_classes_probs):
+        log2 = np.log2(covered_classes_probs)
+        plog2p = covered_classes_probs.multiply(log2)
+        return plog2p.sum() * -1
