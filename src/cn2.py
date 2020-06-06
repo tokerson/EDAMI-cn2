@@ -145,6 +145,7 @@ class CN2:
                         correct += 1
                     else:
                         incorrect += 1
+                    break
 
         # rules test
         rules_accuracy = dict()
