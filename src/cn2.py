@@ -2,17 +2,18 @@ import numpy as np
 
 
 class CN2:
-    def __init__(self, training_set, attributes, min_significance=0.8, star_max_size=5):
+    def __init__(self, training_set, attributes, class_col_name, min_significance=0.8, star_max_size=5):
         self.training_set = training_set
         self.attributes = attributes
-        self.classified_results = training_set['result'].to_numpy()
+        self.class_col_name = class_col_name
+        self.classified_results = training_set[self.class_col_name].to_numpy()
         self.selectors = self.get_selectors(attributes)
         self.min_significance = min_significance
         self.star_max_size = star_max_size
         self.E = training_set.copy()
 
     def get_selectors(self, attributes):
-        _attributes = attributes[0:-1]  # remove result from selector attributes
+        _attributes = attributes[0:-1]  # remove last column from selector attributes
         selectors = []
         for attribute in _attributes:
             self.possible_values = self.training_set[attribute].unique()
@@ -75,7 +76,7 @@ class CN2:
         return covered_examples
 
     def get_most_common_class_from_subset(self, training_subset):
-        classes = self.training_set.loc[training_subset.index, ['result']]
+        classes = self.training_set.loc[training_subset.index, [self.class_col_name]]
         return classes.iloc[:, 0].value_counts(sort=True).index[0]
 
     def set_new_star(self, star):
@@ -110,7 +111,7 @@ class CN2:
         return (significance, entropy)
 
     def get_covered_classes_probabilities(self, covered_examples):
-        classes = self.training_set.loc[covered_examples.index, ['result']]
+        classes = self.training_set.loc[covered_examples.index, [self.class_col_name]]
         covered_classes_counts = classes.iloc[:, 0].value_counts()
         return covered_classes_counts.divide(len(classes))
 
