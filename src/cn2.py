@@ -122,7 +122,7 @@ class CN2:
         return covered_classes_counts.divide(len(classes))
 
     def calculate_significance(self, covered_classes_probs):
-        train_classes = self.training_set.iloc[:, -1]
+        train_classes = self.E.iloc[:, -1]
         train_num_instances = len(train_classes)
         train_counts = train_classes.value_counts()
         train_probs = train_counts.divide(train_num_instances)
@@ -150,6 +150,8 @@ class CN2:
                     else:
                         incorrect += 1
                     break
+                else:
+                    print('hello')
         return (correct, incorrect, total)
 
     def is_test_example_covered_by_rule(self, test_example, rule):
