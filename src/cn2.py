@@ -30,7 +30,8 @@ class CN2:
                 # drop items by indexes in training_set
                 self.E = self.E.drop(training_subset.index)
                 most_common_class = self.get_most_common_class_from_subset(training_subset)
-                rule_list.append("if {} then the class is {}".format(best_complex, most_common_class))
+                rule_list.append(("if {} then the class is {}".format(best_complex, most_common_class), best_complex,
+                                  most_common_class))
             else:
                 break
             print(len(self.E))
@@ -128,3 +129,27 @@ class CN2:
         log2 = np.log2(covered_classes_probs)
         plog2p = covered_classes_probs.multiply(log2)
         return plog2p.sum() * -1
+
+    def test(self, test_set, rules):
+        testResults = []
+        test_data = test_set.iloc[:, :-1]
+        total = len(test_data.index)
+        correct = 0
+        incorrect = 0
+        not_covered = 0
+        for test_example in test_set.iterrows():
+            for rule in rules:
+                if self.is_test_example_covered_by_rule(test_example[1][:-1], rule[1]):
+                    if rule[2] == test_example[1][self.class_col_name]:
+                        correct += 1
+                    else:
+                        incorrect += 1
+                    break
+        return (correct, incorrect, total)
+
+    def is_test_example_covered_by_rule(self, test_example, rule):
+        for selector in rule:
+            if test_example[selector[0]] != selector[1]:
+                return False
+
+        return True

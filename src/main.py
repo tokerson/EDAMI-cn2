@@ -18,4 +18,6 @@ if __name__ == "__main__":
     test_set = load_data(os.path.join(path, 'data', 'adult', 'test.csv'))
     cn2 = CN2(training_set, colnames, colnames[-1])
     rule_list = cn2.learn()
+    test_results = cn2.test(test_set, rule_list)
     print(rule_list)
+    print(test_results)
