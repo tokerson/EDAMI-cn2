@@ -34,32 +34,35 @@ class CN2:
                                   most_common_class))
             else:
                 break
-            print(len(self.E))
+            print(("{} -> {} ({})").format(best_complex, most_common_class, len(self.E)))
 
         return rule_list
 
     def find_best_condition_expression(self):
         star = []
         best_complex = None
-        best_entropy = None
+        best_entropy = float('inf')
+        best_significance = 0.0
+
         while True:
             new_star = self.set_new_star(star)
             complex_entropies = {}
             for index, complex in enumerate(new_star):
                 significance, entropy = self.get_significance_and_entropy(complex)
-                complex_entropies[index] = entropy
-                if best_entropy is None: best_entropy = entropy
-
-                if significance > self.min_significance and entropy < best_entropy:
-                    best_complex = complex.copy()
-                    best_entropy = entropy
+                if significance > self.min_significance:
+                    if entropy == 0.0: return complex.copy()
+                    complex_entropies[index] = entropy
+                    if entropy < best_entropy:
+                        best_complex = complex.copy()
+                        best_entropy = entropy
+                        best_significance = significance
 
             # remove the worst complexes
             best_complex_indexes = sorted(complex_entropies.items(), key=lambda item: item[1], reverse=True)[
                                    0:self.star_max_size]
 
             star = [new_star[x[0]] for x in best_complex_indexes]
-            if len(star) == 0:
+            if len(star) == 0 or best_significance < self.min_significance:
                 break
 
         return best_complex
@@ -100,7 +103,9 @@ class CN2:
             if selector[0] == _selector[0]:
                 return None  # it is duplicate
 
-        return complex.append(selector)
+        new_complex = complex.copy()
+        new_complex.append(selector)
+        return new_complex
 
     def get_significance_and_entropy(self, complex):
         covered_examples = self.get_examples_covered_by_complex(complex)
