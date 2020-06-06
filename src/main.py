@@ -67,6 +67,6 @@ def run_cn2(cn2):
     return rule_list
 
 if __name__ == "__main__":
-    run_cn2_on_cars_dataset()
+    # run_cn2_on_cars_dataset()
     run_cn2_on_nursery_dataset()
-    run_cn2_on_adults_dataset(min_significance=0.8)
+    # run_cn2_on_adults_dataset(min_significance=0.8)

@@ -11,6 +11,7 @@ class CN2:
         self.min_significance = min_significance
         self.star_max_size = star_max_size
         self.E = training_set.copy()
+        self.update_train_probs()
 
     def get_selectors(self, attributes):
         _attributes = attributes[0:-1]  # remove last column from selector attributes
@@ -29,6 +30,7 @@ class CN2:
                 training_subset = self.get_examples_covered_by_complex(best_complex)
                 # drop items by indexes in training_set
                 self.E = self.E.drop(training_subset.index)
+                self.update_train_probs()
                 most_common_class = self.get_most_common_class_from_subset(training_subset)
                 rule_list.append(("if {} then the class is {}".format(best_complex, most_common_class), best_complex,
                                   most_common_class))
@@ -57,7 +59,7 @@ class CN2:
                         best_significance = significance
 
             # remove the worst complexes
-            best_complex_indexes = sorted(complex_entropies.items(), key=lambda item: item[1], reverse=True)[
+            best_complex_indexes = sorted(complex_entropies.items(), key=lambda item: item[1])[
                                    0:self.star_max_size]
 
             star = [new_star[x[0]] for x in best_complex_indexes]
@@ -121,13 +123,8 @@ class CN2:
         return covered_classes_counts.divide(len(classes))
 
     def calculate_significance(self, covered_classes_probs):
-        train_classes = self.E.iloc[:, -1]
-        train_num_instances = len(train_classes)
-        train_counts = train_classes.value_counts()
-        train_probs = train_counts.divide(train_num_instances)
-
         return covered_classes_probs.multiply(
-            np.log(covered_classes_probs.divide(train_probs))).sum() * 2
+            np.log(covered_classes_probs.divide(self.train_probs))).sum() * 2
 
     def calculate_entropy(self, covered_classes_probs):
         log2 = np.log2(covered_classes_probs)
@@ -172,3 +169,9 @@ class CN2:
                 return False
 
         return True
+
+    def update_train_probs(self):
+        train_classes = self.E.iloc[:, -1]
+        train_num_instances = len(train_classes)
+        train_counts = train_classes.value_counts()
+        self.train_probs = train_counts.divide(train_num_instances)
