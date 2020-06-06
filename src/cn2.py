@@ -34,7 +34,6 @@ class CN2:
                                   most_common_class))
             else:
                 break
-            print(("{} -> {} ({})").format(best_complex, most_common_class, len(self.E)))
 
         return rule_list
 
@@ -136,12 +135,12 @@ class CN2:
         return plog2p.sum() * -1
 
     def test(self, test_set, rules):
-        testResults = []
         test_data = test_set.iloc[:, :-1]
         total = len(test_data.index)
         correct = 0
         incorrect = 0
-        not_covered = 0
+
+        # classification test
         for test_example in test_set.iterrows():
             for rule in rules:
                 if self.is_test_example_covered_by_rule(test_example[1][:-1], rule[1]):
@@ -149,10 +148,23 @@ class CN2:
                         correct += 1
                     else:
                         incorrect += 1
-                    break
-                else:
-                    print('hello')
-        return (correct, incorrect, total)
+
+        # rules test
+        rules_accuracy = dict()
+        for rule in rules:
+            rules_accuracy[rule[0]] = (0.0, 0 ,0)
+            rule_correct = 0
+            rule_incorrect = 0
+            for test_example in test_set.iterrows():
+                if self.is_test_example_covered_by_rule(test_example[1][:-1], rule[1]):
+                    if rule[2] == test_example[1][self.class_col_name]:
+                        rule_correct += 1
+                    else:
+                        rule_incorrect += 1
+            rules_accuracy[rule[0]] = (rule_correct / (rule_correct + rule_incorrect), rule_correct, rule_incorrect)
+
+        not_covered = total - correct - incorrect
+        return (correct, incorrect, not_covered, total, rules_accuracy)
 
     def is_test_example_covered_by_rule(self, test_example, rule):
         for selector in rule:
