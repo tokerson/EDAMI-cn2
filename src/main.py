@@ -5,6 +5,8 @@ from src.cn2 import CN2
 
 path = os.path.dirname(os.getcwd())
 
+chosen_dataset = None
+
 adult_colnames = ['age', 'workclass', 'fnlwgt', 'education', 'education-num', 'marital-status', 'occupation',
                   'relationship', 'race', 'sex', 'capital-gain', 'capital-loss', 'hours-per-week', 'native-country',
                   'result']
@@ -68,7 +70,8 @@ def run_cn2(cn2):
     print("Learning time: {} seconds".format(learning_end - learning_start))
     print("Number of rules: {}".format(len(rule_list)))
     save_rules_to_file(os.path.join(path, 'results',
-                                    "results_star={},significance={}".format(cn2.star_max_size, cn2.min_significance)), rule_list)
+                                    "results_{}_star={},significance={}".format(chosen_dataset, cn2.star_max_size,
+                                                                                cn2.min_significance)), rule_list)
     return rule_list
 
 
@@ -95,8 +98,11 @@ if __name__ == "__main__":
         max_star_size = int(input("Insert max size of the star [int]:"))
         min_significance = float(input("Insert min significance [float, dot separated]:"))
         if user_input == 1:
+            chosen_dataset = "adults"
             run_cn2_on_adults_dataset(min_significance=min_significance, star_max_size=max_star_size)
         elif user_input == 2:
+            chosen_dataset = "cars"
             run_cn2_on_cars_dataset(min_significance=min_significance, star_max_size=max_star_size)
         elif user_input == 3:
+            chosen_dataset = "nursery"
             run_cn2_on_nursery_dataset(min_significance=min_significance, star_max_size=max_star_size)

@@ -159,7 +159,8 @@ class CN2:
                         rule_correct += 1
                     else:
                         rule_incorrect += 1
-            rules_accuracy[rule[0]] = (rule_correct / (rule_correct + rule_incorrect), rule_correct, rule_incorrect)
+            if rule_correct != 0:
+                rules_accuracy[rule[0]] = (rule_correct / (rule_correct + rule_incorrect), rule_correct, rule_incorrect)
 
         not_covered = total - correct - incorrect
         return (correct, incorrect, not_covered, total, rules_accuracy)
