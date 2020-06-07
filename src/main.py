@@ -31,6 +31,7 @@ def run_cn2_on_cars_dataset(min_significance=0.5, star_max_size=5):
     test_results = cn2.test(test_set, rule_list)
     print(test_results)
 
+
 def run_cn2_on_nursery_dataset(min_significance=0.5, star_max_size=5):
     print('-----------------')
     print('NURSERY')
@@ -43,6 +44,7 @@ def run_cn2_on_nursery_dataset(min_significance=0.5, star_max_size=5):
     # test_results: (correct, incorrect, uncovered, total, rules_accuracy_dict)
     test_results = cn2.test(test_set, rule_list)
     print(test_results)
+
 
 def run_cn2_on_adults_dataset(min_significance=0.5, star_max_size=5):
     print('-----------------')
@@ -57,6 +59,7 @@ def run_cn2_on_adults_dataset(min_significance=0.5, star_max_size=5):
     test_results = cn2.test(test_set, rule_list)
     print(test_results)
 
+
 def run_cn2(cn2):
     learning_start = time.time()
     rule_list = cn2.learn()
@@ -64,7 +67,18 @@ def run_cn2(cn2):
 
     print("Learning time: {} seconds".format(learning_end - learning_start))
     print("Number of rules: {}".format(len(rule_list)))
+    save_rules_to_file(os.path.join(path, 'results',
+                                    "results_star={},significance={}".format(cn2.star_max_size, cn2.min_significance)), rule_list)
     return rule_list
+
+
+def save_rules_to_file(filename, rules):
+    f = open(filename, "w")
+    for rule in rules:
+        f.write(rule[0])
+        f.write('\n')
+    f.close()
+
 
 if __name__ == "__main__":
     loop = True
@@ -78,7 +92,7 @@ if __name__ == "__main__":
         if user_input > 3 or user_input < 1:
             loop = False
             break
-        max_star_size = int(input("Insert max size of the start [int]:"))
+        max_star_size = int(input("Insert max size of the star [int]:"))
         min_significance = float(input("Insert min significance [float, dot separated]:"))
         if user_input == 1:
             run_cn2_on_adults_dataset(min_significance=min_significance, star_max_size=max_star_size)
@@ -86,5 +100,3 @@ if __name__ == "__main__":
             run_cn2_on_cars_dataset(min_significance=min_significance, star_max_size=max_star_size)
         elif user_input == 3:
             run_cn2_on_nursery_dataset(min_significance=min_significance, star_max_size=max_star_size)
-
-
