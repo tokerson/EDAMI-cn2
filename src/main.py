@@ -67,6 +67,24 @@ def run_cn2(cn2):
     return rule_list
 
 if __name__ == "__main__":
-    # run_cn2_on_cars_dataset()
-    run_cn2_on_nursery_dataset()
-    # run_cn2_on_adults_dataset(min_significance=0.8)
+    loop = True
+    while loop:
+        print("---------CN2--------------")
+        print("1. Run algorithm for adult data")
+        print("2. Run algorithm for car data")
+        print("3. Run algorithm for nursery data")
+        inp = input("Choose menu option, any other key leaves the program:")
+        user_input = int(inp)
+        if user_input > 3 or user_input < 1:
+            loop = False
+            break
+        max_star_size = int(input("Insert max size of the start [int]:"))
+        min_significance = float(input("Insert min significance [float, dot separated]:"))
+        if user_input == 1:
+            run_cn2_on_adults_dataset(min_significance=min_significance, star_max_size=max_star_size)
+        elif user_input == 2:
+            run_cn2_on_cars_dataset(min_significance=min_significance, star_max_size=max_star_size)
+        elif user_input == 3:
+            run_cn2_on_nursery_dataset(min_significance=min_significance, star_max_size=max_star_size)
+
+
